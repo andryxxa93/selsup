@@ -1,24 +1,19 @@
-import './App.css'
-import { useState } from "react";
+import {InputHTMLAttributes, useState} from "react";
 
 interface Param {
   id: number;
   name: string;
-  type: 'string' | 'number';
+  type: InputHTMLAttributes<HTMLInputElement>['type'];
 }
 interface ParamValue {
   paramId: number;
   value: string | number;
 }
 
-type Color = {
-  name: string;
-}
-
 interface Model {
   paramValues: ParamValue[];
-  colors: Color[];
 }
+
 interface Props {
   params: Param[];
   model: Model;
@@ -26,9 +21,14 @@ interface Props {
 
 function ParamEditor({params, model}: Props) {
   const [paramValues, setParamValues] = useState<ParamValue[]>(model.paramValues);
+  const [showModel, setShowModel] = useState(false);
 
   function getModel(): Model {
-    return { ...model, paramValues};
+    return { paramValues };
+  }
+
+  function getModelHandler() {
+    setShowModel(!showModel);
   }
 
   const handleChange = (paramId, value) => {
@@ -41,37 +41,53 @@ function ParamEditor({params, model}: Props) {
     setParamValues(updatedValue);
   }
 
-  return <>
-    {params.map((param) => {
-      const currentParamValue = paramValues.find(p => p.paramId === param.id).value || '';
-      return (
-          <div key={param.id}>
-            <label>{param.name}</label>
-            <input
-                value={currentParamValue}
-                onChange={({target}) => handleChange(param.id, target.value)}
-            />
-        </div>
+  return (
+      <div>
+        <form>
+          {params.map((param) => {
+            const currentParamValue = paramValues.find(p => p.paramId === param.id).value || '';
+            return (
+                <div key={param.id}>
+                  <label>{param.name}</label>
+                  <input
+                      type={param.type}
+                      value={currentParamValue}
+                      onChange={({target}) => handleChange(param.id, target.value)}
+                  />
+                </div>
+            )
+          })}
+        </form>
+        <button onClick={getModelHandler}>Show Model</button>
+        {showModel && (
+            <div>
+              {getModel().paramValues.map(paramValue => {
+                return <div>
+                  {params.find(({id}) => id === paramValue.paramId)?.name}:
+                  {paramValue.value}
+                </div>
+              })}
+            </div>
+        )}
+      </div>
       )
-    })}
-  </>
 }
 
 const params: Param[] = [
   {
     id: 1,
     name: "Назначение",
-    type: 'string',
+    type: 'text',
   },
   {
     id: 2,
     name: "Длина",
-    type: 'string',
+    type: 'text',
   },
   {
     id: 3,
     name: 'Цвет',
-    type: 'string'
+    type: 'color'
   },
   {
     id: 4,
@@ -92,14 +108,13 @@ const model: Model = {
     },
     {
       paramId: 3,
-      value: "красный"
+      value: "#ee4949"
     },
     {
       paramId: 4,
       value: 40,
     }
   ],
-  colors: [{ name: 'красный' }, { name: 'голубой' }]
 };
 
 function App() {
